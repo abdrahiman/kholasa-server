@@ -25,7 +25,7 @@ import {
 import { IsMongoIdPipe } from 'src/common';
 import { LessonService } from './lessons.service';
 import { Role, Roles } from 'src/auth/decorator/roles.decorator';
-import { Public } from 'src/auth/decorator/public.decorator';
+import { IS_PUBLIC, Public } from 'src/auth/decorator/public.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { IUser } from 'src/types';
@@ -70,15 +70,17 @@ export class LessonController {
     return this.lessonsService.remove(id);
   }
 
+  //@Roles(Role.ADMIN)
+  @Public()
   @Post('upload')
-  // @Roles(Role.ADMIN)
   @UseInterceptors(
     FileInterceptor('file', {
       fileFilter: (req, file, callback) => {
-        if (file.mimetype !== 'application/pdf') {
+        console.log(file.mimetype);
+        if (!file.mimetype.startsWith("image/")) {
           return callback(
             new HttpException(
-              'Invalid file type. Only PDF files are allowed.',
+              'Invalid file type. Only Images files are allowed.',
               HttpStatus.BAD_REQUEST,
             ),
             false,
@@ -93,7 +95,7 @@ export class LessonController {
     if (!file) {
       throw new HttpException('File not provided.', HttpStatus.BAD_REQUEST);
     }
-    const pdfBuffer = file.buffer;
+    //const pdfBuffer = file.buffer;
     if (scale && !isNaN(+scale)) scale = parseInt(scale);
     else scale = 1.5;
     if (scale < 1 || scale > 5) {
@@ -102,19 +104,17 @@ export class LessonController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const images = await this.lessonsService.convertPdfToImages(
-      pdfBuffer,
-      scale,
-    );
-    if (images.length > 20) {
-      throw new HttpException(
-        'Too many images generated from PDF.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const imagesUrl: string[] = await Promise.all(
-      images.map((image: any) => this.lessonsService.uploadImage(image)),
-    );
-    return { pages: imagesUrl.length, images: imagesUrl };
+    //const images = await this.lessonsService.convertPdfToImages(
+      //pdfBuffer,
+      //scale,
+    //);
+    //if (images.length > 20) {
+      //throw new HttpException(
+        //'Too many images generated from PDF.',
+       // HttpStatus.BAD_REQUEST,
+      //);
+    //}
+    const imagesUrl: string = await this.lessonsService.uploadImage(file);
+    return { url: imagesUrl };
   }
 }

@@ -1,8 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-// import { convert } from 'pdf-img-convert';
-import * as fs from 'fs';
 
 import {
   CreateLessonDto,
@@ -94,19 +92,19 @@ export class LessonService {
 
     return lesson;
   }
+
   async convertPdfToImages(
     pdfBuffer: Buffer,
     scale: number,
   ): Promise<string[] | Uint8Array[]> {
     try {
-      // let pdfArray = await convert(pdfBuffer, { scale });
-      let pdfArray = [];
-      return pdfArray;
+      return [];
     } catch (error) {
+      console.log(error);
       throw Error('Failed to process this pdf');
     }
   }
-  async uploadImage(file: Uint8Array): Promise<string> {
+  async uploadImage(file: any): Promise<string> {
     //for testing
     // fs.writeFile('output.png', file, (err) => {
     //   if (err) console.log(err);
@@ -114,7 +112,7 @@ export class LessonService {
     // });
     // return;
     const data = new FormData();
-    const blob = new Blob([file], { type: 'image/png' });
+    const blob = new Blob([file.buffer], { type: file.mimetype });
     data.append('file', blob);
     data.append('upload_preset', IMAGE_PRESET);
     const res = await fetch(
